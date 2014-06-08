@@ -64,12 +64,64 @@ namespace khoangCach
             current.setX(e.Location.X);
             current.setY(e.Location.Y);
         }
-
         private void pictureBox1_Click(object sender, EventArgs e)
         {
             //add current point to list
             list.Add(this.current.cloneNew());
             richTextBox_log.Text += "Point "+list.Count+" ("+current.getX()+", "+current.getY()+")"+"\n";
+            
+            
+
+
+            /*
+            Bitmap bmp = (Bitmap)pictureBox1.Image;
+            // bmp.GetPixel(current.getX(), current.getY());
+            int x = current.getX();
+            int y = current.getY();
+            int max_y = 1, min_y = -1;
+            bool fmax_y = false, fmin_y = false;
+
+            bmp.SetPixel(x,y,Color.Red);
+            pictureBox1.Image = bmp;
+            return;
+            while (!(fmax_y && fmin_y))
+            {
+                Color min_c = bmp.GetPixel(x, y + min_y);
+                if (min_c.R > 200 && min_c.G > 200 && min_c.B > 200) min_y--;
+                else fmin_y = true;
+
+                Console.WriteLine("Y -- MinColor({0}, {1}, {2}) - min_y: {3}", min_c.R, min_c.G, min_c.B, min_y);
+                Color max_c = bmp.GetPixel(x, y + max_y);
+                if (max_c.R > 200 && max_c.G > 200 && max_c.B > 200) max_y++;
+                else fmax_y = true;
+
+                Console.WriteLine("Y -- MaxColor({0}, {1}, {2}) - max_y: {3}", max_c.R, max_c.G, max_c.B, max_y);
+
+                bmp.SetPixel(x, y + min_y + 1, Color.Black);
+                bmp.SetPixel(x,  y + max_y - 1, Color.Black);
+            }
+
+
+            ////////
+            int max_x = 1, min_x = -1;
+            bool fmax_x = false, fmin_x = false;
+
+            while (!(fmax_x && fmin_x))
+            {
+                Color min_c = bmp.GetPixel(x + min_x, y);
+                if (min_c.R > 200 && min_c.G > 200 && min_c.B > 200) min_x--;
+                else fmin_x = true;
+
+                Color max_c = bmp.GetPixel(x + max_x, y);
+                if (max_c.R > 200 && max_c.G > 200 && max_c.B > 200) max_x++;
+                else fmax_x = true;
+            }
+
+            int fx = (min_x + max_x) / 2;
+            int fy = (min_y + max_y) / 2;
+
+            bmp.SetPixel(fx, fy, Color.Red);
+            */
         }
 
         private void button_calculate_Click(object sender, EventArgs e)
@@ -87,8 +139,45 @@ namespace khoangCach
                     total += (int)tmp_cur.distanceFrom(tmp_prev);
                 }
             }
+            //calculate relative image size
+            int wraperH = pictureBox1.Height;
+            int wraperW = pictureBox1.Width;
+
+            Bitmap bmp = (Bitmap)pictureBox1.Image;
+            int realImgH = bmp.Height;
+            int realImgW = bmp.Width;
+
+            MousePoint relative = calculate(wraperH, wraperW, realImgH, realImgW);
+            //
+            float tile = (float)realImgH / relative.getY();
+            total = (int)(total * tile);//realIMG => distance
+            MousePoint relative2 = calculate(2400, 3000, realImgH, realImgW);
+            float tile2 = (float)realImgH / relative2.getY();
+            total = (int)(total / tile2);//relative => distance
             //display on view
             label_totalDistance.Text = total.ToString();
+        }
+        private MousePoint calculate(int wrapperH, int wrapperW, int realImgH, int realImgW)
+        {
+            MousePoint re = new MousePoint(0,0);
+
+            int relativeImgH = 0;
+            int relativeImgW = 0;
+            float wraperTL = (float)wrapperH / wrapperW;
+            float realImgTL = (float)realImgH / realImgW;
+            if (wraperTL >= realImgTL)
+            {
+                relativeImgW = wrapperW;
+                relativeImgH = (int)(relativeImgW * realImgTL);
+            }
+            else
+            {
+                relativeImgH = wrapperH;
+                relativeImgW = (int)(relativeImgH / realImgTL);
+            }
+            re.setX(relativeImgW);
+            re.setY(relativeImgH);
+            return re;
         }
 
         private void button_clearLog_Click(object sender, EventArgs e)
@@ -184,5 +273,14 @@ namespace khoangCach
              * */
 
         }
+
+        private void panel1_Resize(object sender, EventArgs e)
+        {
+            //resize picturebox too
+            pictureBox1.Width = panel1.Width;
+            pictureBox1.Height = panel1.Height;
+            Console.WriteLine(panel1.Width + "-"+panel1.Height);
+        }
     }
 }
+
